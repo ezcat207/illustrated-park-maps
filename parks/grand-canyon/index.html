@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>大峡谷国家公园 · 插画旅行地图</title>
+<style>
+  :root{ --paper:#f6eeda; --ink:#4a3826; --accent:#8a5a2b; --gold:#e8a13a; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#e7d9b8;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;color:var(--ink)}
+  #app{max-width:1180px;margin:0 auto;padding:10px 10px 4px}
+  header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:4px 2px 10px}
+  h1{font-size:22px;margin:0;letter-spacing:1px}
+  h1 .en{display:block;font-family:"Segoe Print","Bradley Hand","Chalkboard SE","Comic Sans MS",cursive;font-size:14px;color:#8a6a45;font-weight:normal;letter-spacing:0}
+  .sub{margin:3px 0 0;font-size:13px;color:#8a6a45}
+  #langBtn{flex:0 0 auto;margin-top:2px;border:2px solid var(--accent);background:#fffdf5;color:var(--ink);
+    border-radius:999px;padding:7px 16px;font-size:14px;cursor:pointer;font-weight:bold}
+  #langBtn:active{transform:scale(.96)}
+  #mapwrap{position:relative;border:3px solid var(--accent);border-radius:14px;overflow:hidden;
+    background:var(--paper);box-shadow:0 4px 18px rgba(90,60,20,.25)}
+  svg#map{display:block;width:100%;height:auto;touch-action:manipulation}
+  .maplabel{font-family:"Segoe Print","Bradley Hand","Chalkboard SE","Comic Sans MS",cursive;
+    fill:#6a4a28;paint-order:stroke;stroke:#f6eeda;stroke-width:3px}
+  .plabel{font-size:13px;font-weight:bold;fill:#3f2d18;paint-order:stroke;stroke:#fbf5e3;stroke-width:3.5px}
+  .plabel.en{font-size:10.5px;font-weight:normal;font-family:"Segoe Print","Chalkboard SE",cursive}
+  .poi{cursor:pointer}
+  .poi .badge{fill:#fffdf5;stroke:#8a5a2b;stroke-width:2.5}
+  .poi.sec .badge{fill:#f7efdc}
+  .poi:focus{outline:none}
+  .poi:focus .badge,.poi:hover .badge{stroke:#b3541e;stroke-width:3.5}
+  .poi .glyph{color:#5a3d1e}
+  .leader{stroke:#8a5a2b;stroke-width:1.6;stroke-dasharray:4 3;opacity:.75}
+  .truedot{fill:#8a5a2b;opacity:.8}
+  /* legend */
+  #legend{position:absolute;left:10px;bottom:10px;background:rgba(255,253,245,.95);border:2px solid var(--accent);
+    border-radius:10px;padding:6px 10px;font-size:12px;max-width:262px;z-index:4;line-height:1.7}
+  #legend summary{cursor:pointer;font-weight:bold;font-size:13px}
+  #legend .row{display:flex;align-items:center;gap:6px}
+  #legend svg{flex:0 0 auto}
+  #legend .cats{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px}
+  /* popup */
+  #popup{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;width:min(450px,calc(100% - 24px));
+    background:#fffdf5;border:2.5px solid var(--accent);border-radius:14px;padding:14px 16px 12px;
+    box-shadow:0 8px 26px rgba(60,35,10,.32);z-index:6}
+  @media(min-width:700px){ #popup{left:auto;right:14px;transform:none} }
+  #popup[hidden]{display:none}
+  #popClose{position:absolute;top:6px;right:10px;border:none;background:none;font-size:22px;cursor:pointer;color:#8a6a45;line-height:1}
+  #popPills{display:flex;gap:6px;margin:2px 26px 6px 0;flex-wrap:wrap}
+  .pill{font-size:11px;border-radius:999px;padding:2px 9px;border:1.5px solid}
+  .pill.rec{color:#8a4d00;border-color:var(--gold);background:#fdf0d5;font-weight:bold}
+  .pill.sec{color:#6a5a3a;border-color:#b09a6a;background:#f6eeda}
+  .pill.cat{color:#4a5a6a;border-color:#7a9ab0;background:#eef4f8}
+  #popNameZh{margin:0;font-size:19px}
+  #popNameEn{font-family:"Segoe Print","Chalkboard SE",cursive;font-size:12.5px;color:#8a6a45;margin:1px 0 6px}
+  #popBlurb{margin:0;font-size:14px;line-height:1.65}
+  #popNote{margin:8px 0 0;font-size:11.5px;color:#a08050}
+  footer{padding:8px 4px 14px;font-size:11.5px;color:#a08050;text-align:center}
+  @media(max-width:640px){
+    h1{font-size:17px} h1 .en{font-size:12px}
+    .sub{font-size:11.5px}
+    #legend{font-size:11px;max-width:210px;padding:4px 8px}
+    #popBlurb{font-size:13.5px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div>
+      <h1>大峡谷国家公园<span class="en">Grand Canyon National Park</span></h1>
+      <p class="sub" data-i18n="subtitle">南缘 South Rim · 手绘插画旅行地图（示意）</p>
+    </div>
+    <button id="langBtn" aria-label="switch language">EN</button>
+  </header>
+
+  <div id="mapwrap">
+    <svg id="map" viewBox="0 0 1200 640" role="img" aria-label="Grand Canyon South Rim illustrated map">
+      <defs>
+        <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="7" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="7"/>
+        </filter>
+        <filter id="wobbleSoft" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="3" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/>
+        </filter>
+        <filter id="paperTex" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" result="n"/>
+          <feColorMatrix in="n" values="0 0 0 0 0.55  0 0 0 0 0.45  0 0 0 0 0.30  0 0 0 0.05 0"/>
+        </filter>
+        <!-- rim path (single source of truth) -->
+        <path id="rimPath" d="M40,228 C120,214 200,206 290,200 C360,195 400,193 430,210
+          C470,245 520,300 575,345 C610,372 630,385 651,393
+          C665,402 660,420 652,432 C646,442 650,448 660,442
+          C672,434 678,410 684,379 C690,368 720,362 755,365
+          C775,364 790,368 802,373 C830,380 860,355 900,325
+          C950,290 1000,270 1066,257 C1100,250 1130,250 1165,254" fill="none"/>
+        <clipPath id="gorgeClip">
+          <path d="M40,228 C120,214 200,206 290,200 C360,195 400,193 430,210
+          C470,245 520,300 575,345 C610,372 630,385 651,393
+          C665,402 660,420 652,432 C646,442 650,448 660,442
+          C672,434 678,410 684,379 C690,368 720,362 755,365
+          C775,364 790,368 802,373 C830,380 860,355 900,325
+          C950,290 1000,270 1066,257 C1100,250 1130,250 1165,254
+          L1165,-60 L40,-60 Z"/>
+        </clipPath>
+        <!-- category glyphs (24x24, stroke=currentColor) -->
+        <g id="g-viewpoint" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <path d="M-11,0 C-6,-7.5 6,-7.5 11,0 C6,7.5 -6,7.5 -11,0 Z"/>
+          <circle cx="0" cy="0" r="3.1" fill="currentColor" stroke="none"/>
+        </g>
+        <g id="g-trailhead" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <path d="M-9,9 C-3,5 -11,1 -3,-2 C3,-4.5 -3,-7 5,-10" stroke-dasharray="3.5 3"/>
+          <circle cx="6.5" cy="-10" r="2.6" fill="currentColor" stroke="none"/>
+        </g>
+        <g id="g-hub" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <rect x="-10.5" y="-7.5" width="21" height="12.5" rx="3"/>
+          <path d="M-10.5,-1 H10.5"/>
+          <circle cx="-6" cy="7.5" r="2.3" fill="currentColor" stroke="none"/>
+          <circle cx="6" cy="7.5" r="2.3" fill="currentColor" stroke="none"/>
+        </g>
+        <g id="g-lodge" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M-10.5,1.5 L0,-9 L10.5,1.5"/>
+          <rect x="-7.5" y="1.5" width="15" height="8.5"/>
+          <rect x="-2" y="4.5" width="4" height="5.5" fill="currentColor" stroke="none"/>
+        </g>
+        <g id="g-cultural" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M-10.5,9 L-10.5,3 L-5.5,3 L-5.5,-2.5 L-0.5,-2.5 L-0.5,-8 L4.5,-8 L4.5,-2.5 L10.5,-2.5 L10.5,9 Z"/>
+        </g>
+        <g id="g-star">
+          <path d="M0,-7.5 L2.1,-2.3 L7.5,-2.3 L3.1,0.9 L4.7,6.1 L0,3 L-4.7,6.1 L-3.1,0.9 L-7.5,-2.3 L-2.1,-2.3 Z"
+            fill="#e8a13a" stroke="#8a5a2b" stroke-width="1.2"/>
+        </g>
+        <g id="pine">
+          <path d="M0,-14 L7,-2 L3.5,-2 L8,8 L-8,8 L-3.5,-2 L-7,-2 Z" fill="#5f7350"/>
+          <rect x="-1.6" y="8" width="3.2" height="5" fill="#6a4a28"/>
+        </g>
+      </defs>
+
+      <!-- paper -->
+      <rect x="0" y="0" width="1200" height="640" fill="#f6eeda"/>
+      <rect x="0" y="0" width="1200" height="640" filter="url(#paperTex)" opacity="0.55"/>
+
+      <!-- south plateau wash -->
+      <g filter="url(#wobble)" opacity="0.55">
+        <path d="M0,640 L0,300 C150,280 300,260 450,320 C600,380 700,470 850,430 C1000,390 1100,330 1200,340 L1200,640 Z" fill="#efe0bf"/>
+      </g>
+
+      <!-- canyon strata (clipped to gorge) -->
+      <g clip-path="url(#gorgeClip)" filter="url(#wobble)">
+        <rect x="-20" y="-60" width="1240" height="80" fill="#ecdcb0"/>
+        <rect x="-20" y="20"  width="1240" height="80" fill="#e3c78d"/>
+        <rect x="-20" y="100" width="1240" height="80" fill="#d29a5c"/>
+        <rect x="-20" y="180" width="1240" height="80" fill="#bd7040"/>
+        <rect x="-20" y="260" width="1240" height="80" fill="#a55636"/>
+        <rect x="-20" y="340" width="1240" height="80" fill="#8a5a44"/>
+        <rect x="-20" y="420" width="1240" height="80" fill="#5f4636"/>
+        <!-- colorado river -->
+        <path d="M40,120 C120,105 190,118 270,108 C350,98 420,60 500,70 C580,80 600,150 660,190
+                 C700,215 740,200 800,180 C870,155 930,150 1000,140 C1050,133 1110,138 1165,142"
+              fill="none" stroke="#6fa8bd" stroke-width="8" stroke-linecap="round"/>
+        <path d="M40,120 C120,105 190,118 270,108 C350,98 420,60 500,70 C580,80 600,150 660,190
+                 C700,215 740,200 800,180 C870,155 930,150 1000,140 C1050,133 1110,138 1165,142"
+              fill="none" stroke="#c4e2ec" stroke-width="3" stroke-linecap="round"/>
+        <!-- buttes on far side -->
+        <g fill="#b98a5a" opacity="0.85">
+          <path d="M180,60 l26,-34 l26,34 z"/>
+          <path d="M880,52 l32,-40 l32,40 z"/>
+          <path d="M700,44 l22,-28 l22,28 z"/>
+        </g>
+      </g>
+
+      <!-- rim edge -->
+      <g filter="url(#wobble)">
+        <use href="#rimPath" stroke="#3a2410" stroke-width="10" opacity="0.18" transform="translate(0,5)"/>
+        <use href="#rimPath" stroke="#5a3a1e" stroke-width="5" stroke-linecap="round"/>
+        <use href="#rimPath" stroke="#8a5a2b" stroke-width="1.6" stroke-dasharray="2 9" stroke-linecap="round" opacity="0.8"/>
+      </g>
+
+      <!-- roads & trails -->
+      <g filter="url(#wobble)" fill="none" stroke-linecap="round">
+        <!-- Hermit Road (west) -->
+        <path d="M389,196 C320,192 240,190 160,196 C145,197 138,198 134,199"
+              stroke="#b06a3b" stroke-width="4.5" stroke-dasharray="11 7"/>
+        <!-- Desert View Drive (east) -->
+        <path d="M389,196 C460,215 520,260 575,310 C610,345 630,370 651,393
+                 C680,410 720,400 760,385 C800,372 830,360 870,335 C920,305 980,280 1066,257"
+              stroke="#9a8a6a" stroke-width="4.5" stroke-dasharray="11 7"/>
+        <!-- spur to Tusayan Ruin -->
+        <path d="M990,278 C985,340 983,400 983,452" stroke="#9a8a6a" stroke-width="3.5" stroke-dasharray="9 7"/>
+        <!-- Bright Angel Trail switchbacks -->
+        <path d="M396,208 l-14,-15 l26,-9 l-26,-9 l26,-9 l-26,-9 l26,-9 l-22,-10 l18,-12 l-14,-12"
+              stroke="#7a5c3a" stroke-width="3" stroke-dasharray="5 4"/>
+        <!-- South Kaibab Trail -->
+        <path d="M651,439 C648,400 656,360 650,320 C645,280 653,240 649,205"
+              stroke="#7a5c3a" stroke-width="3" stroke-dasharray="5 4"/>
+        <!-- Grandview Trail -->
+        <path d="M684,379 C700,362 716,352 732,342" stroke="#7a5c3a" stroke-width="3" stroke-dasharray="5 4"/>
+        <!-- red shuttle dots on Hermit Rd -->
+        <g fill="#c0392b" stroke="none">
+          <circle cx="300" cy="193" r="4"/><circle cx="220" cy="193" r="4"/><circle cx="150" cy="198" r="4"/>
+        </g>
+      </g>
+
+      <!-- village houses -->
+      <g filter="url(#wobbleSoft)" opacity="0.9">
+        <g fill="#d9b98a" stroke="#8a5a2b" stroke-width="1.5">
+          <rect x="330" y="222" width="18" height="12"/><path d="M330,222 l9,-7 l9,7" fill="none"/>
+          <rect x="420" y="248" width="20" height="13"/><path d="M420,248 l10,-8 l10,8" fill="none"/>
+          <rect x="300" y="250" width="16" height="11"/><path d="M300,250 l8,-6 l8,6" fill="none"/>
+        </g>
+      </g>
+
+      <!-- pines -->
+      <g filter="url(#wobbleSoft)" opacity="0.85">
+        <use href="#pine" transform="translate(180,330) scale(1.1)"/>
+        <use href="#pine" transform="translate(260,460) scale(0.9)"/>
+        <use href="#pine" transform="translate(380,530) scale(1.2)"/>
+        <use href="#pine" transform="translate(480,480) scale(0.85)"/>
+        <use href="#pine" transform="translate(560,570) scale(1.1)"/>
+        <use href="#pine" transform="translate(700,545) scale(0.9)"/>
+        <use href="#pine" transform="translate(830,530) scale(1.15)"/>
+        <use href="#pine" transform="translate(930,480) scale(0.85)"/>
+        <use href="#pine" transform="translate(1020,570) scale(1.05)"/>
+        <use href="#pine" transform="translate(1105,460) scale(0.9)"/>
+        <use href="#pine" transform="translate(240,570) scale(1.0)"/>
+        <use href="#pine" transform="translate(880,590) scale(0.95)"/>
+      </g>
+
+      <!-- map text labels -->
+      <g font-size="15">
+        <text class="maplabel" x="296" y="86" transform="rotate(-4 296 86)">科罗拉多河 · Colorado River</text>
+        <text class="maplabel" x="986" y="34">北缘 North Rim →</text>
+        <text class="maplabel" x="228" y="180" font-size="12.5">Hermit Rd · 红线摆渡车</text>
+        <text class="maplabel" x="872" y="306" font-size="12.5" transform="rotate(-14 872 306)">Desert View Dr</text>
+        <text class="maplabel" x="448" y="148" font-size="12" transform="rotate(-62 448 148)">Bright Angel Trail</text>
+        <text class="maplabel" x="668" y="310" font-size="12" transform="rotate(-84 668 310)">South Kaibab Trail</text>
+      </g>
+
+      <!-- compass + scale -->
+      <g filter="url(#wobbleSoft)">
+        <circle cx="1120" cy="96" r="24" fill="#fffdf5" stroke="#8a5a2b" stroke-width="2.5"/>
+        <path d="M1120,80 L1126,104 L1120,99 L1114,104 Z" fill="#b3541e"/>
+        <text x="1120" y="132" text-anchor="middle" font-size="13" font-weight="bold" fill="#5a3d1e">N</text>
+        <g stroke="#5a3d1e" stroke-width="2.5">
+          <line x1="1010" y1="606" x2="1144" y2="606"/>
+          <line x1="1010" y1="600" x2="1010" y2="612"/>
+          <line x1="1144" y1="600" x2="1144" y2="612"/>
+        </g>
+        <text x="1077" y="598" text-anchor="middle" font-size="12" fill="#5a3d1e">5 km</text>
+      </g>
+
+      <!-- leaders + markers injected by JS -->
+      <g id="leaders"></g>
+      <g id="markers" filter="url(#wobbleSoft)"></g>
+    </svg>
+
+    <div id="legend">
+      <details id="legendDetails" open>
+        <summary data-i18n="legendTitle">图例 · Legend</summary>
+        <div class="row">
+          <svg width="34" height="34" viewBox="-20 -20 40 40">
+            <circle r="15" fill="#fffdf5" stroke="#8a5a2b" stroke-width="2.5"/>
+            <use href="#g-star" transform="translate(11,-11) scale(0.9)"/>
+            <use href="#g-viewpoint" color="#5a3d1e" transform="scale(0.85)"/>
+          </svg>
+          <span data-i18n="legRec">★ 推荐必看 · must-see</span>
+        </div>
+        <div class="row">
+          <svg width="34" height="34" viewBox="-20 -20 40 40">
+            <circle r="11" fill="#f7efdc" stroke="#8a5a2b" stroke-width="2.2"/>
+            <use href="#g-viewpoint" color="#5a3d1e" transform="scale(0.7)"/>
+          </svg>
+          <span data-i18n="legSec">次推荐 · 顺路一看</span>
+        </div>
+        <div class="cats" id="legendCats"></div>
+      </details>
+    </div>
+
+    <div id="popup" hidden role="dialog" aria-modal="false">
+      <button id="popClose" aria-label="close">×</button>
+      <div id="popPills"><span class="pill" id="popTier"></span><span class="pill cat" id="popCat"></span></div>
+      <h2 id="popNameZh"></h2>
+      <div id="popNameEn"></div>
+      <p id="popBlurb"></p>
+      <div id="popNote"></div>
+    </div>
+  </div>
+
+  <footer data-i18n="footer">手绘示意 · 非精确地图 · Step 2 将接入实时 GPS 与一键 Google Maps 导航</footer>
+</div>
+<script>
+"use strict";
+/* POI data injected at build time from data/grand-canyon-pois.json */
+const POIS = [{"blurb_en": "South Rim basecamp: visitor center, lodges, dining and the free shuttle hub.", "blurb_zh": "南缘大本营：游客中心、住宿餐饮、免费摆渡车总站都在这儿。", "category": "hub", "id": "grand-canyon-village", "lat": 36.0619, "lng": -112.1077, "name_en": "Grand Canyon Village", "name_zh": "大峡谷村", "tier": "recommended", "verified": false}, {"blurb_en": "The classic corridor trailhead — water and shade, great even for a short out-and-back.", "blurb_zh": "最经典的下谷步道起点，有水有遮阴，新手走一段即回也值得。", "category": "trailhead", "id": "bright-angel-trailhead", "lat": 36.0578, "lng": -112.1049, "name_en": "Bright Angel Trailhead", "name_zh": "光明天使步道口", "tier": "recommended", "verified": false}, {"blurb_en": "The classic South Rim overlook — front row for sunrise, walkable from the visitor center.", "blurb_zh": "南缘最经典的观景点，看日出第一排，游客中心步行可达。", "category": "viewpoint", "id": "mather-point", "lat": 35.9953, "lng": -111.9988, "name_en": "Mather Point", "name_zh": "马瑟点", "tier": "recommended", "verified": false}, {"blurb_en": "Home of the Geology Museum — read 2 billion years of rock layers, then look.", "blurb_zh": "地质博物馆所在地，看懂峡谷二十亿年地层再看景。", "category": "viewpoint", "id": "yavapai-point", "lat": 36.0643, "lng": -112.1017, "name_en": "Yavapai Point / Geology Museum", "name_zh": "亚瓦帕点", "tier": "recommended", "verified": false}, {"blurb_en": "Pueblo-style stone tower with panoramic views of the canyon and the Colorado's bend.", "blurb_zh": "印第安风格石塔，登顶俯瞰峡谷与科罗拉多河大拐弯。", "category": "viewpoint", "id": "desert-view-watchtower", "lat": 36.0412, "lng": -111.8264, "name_en": "Desert View Watchtower", "name_zh": "沙漠观景塔", "tier": "recommended", "verified": false}, {"blurb_en": "One of the widest South Rim vistas; trailhead of the historic Grandview Trail.", "blurb_zh": "南缘视野最开阔的点之一，Grandview 步道起点，老矿道历史。", "category": "viewpoint", "id": "grandview-point", "lat": 35.9999, "lng": -111.9853, "name_en": "Grandview Point", "name_zh": "格兰德维尤点", "tier": "recommended", "verified": false}, {"blurb_en": "Stone resthouse at the west end of Hermit Road — best done at sunset via the Red shuttle.", "blurb_zh": "西缘终点石屋，红线摆渡车一路观景点串到底，最适合日落。", "category": "viewpoint", "id": "hermits-rest", "lat": 36.0609, "lng": -112.2136, "name_en": "Hermit's Rest", "name_zh": "隐士之憩", "tier": "recommended", "verified": false}, {"blurb_en": "The most scenic descent (no water, no shade) — Ooh Aah Point makes a perfect turnaround.", "blurb_zh": "景色最壮观的下谷步道（无水无遮阴），走到 Ooh Aah 点回头刚好。", "category": "trailhead", "id": "south-kaibab-trailhead", "lat": 35.9799, "lng": -111.9989, "name_en": "South Kaibab Trailhead", "name_zh": "南凯巴布步道口", "tier": "recommended", "verified": false}, {"blurb_en": "Quiet overlook near South Kaibab, shuttle-accessible and less crowded than Mather.", "blurb_zh": "南凯巴布旁的安静观景点，摆渡车可达，人比马瑟点少。", "category": "viewpoint", "id": "yaki-point", "lat": 35.9771, "lng": -112.0001, "name_en": "Yaki Point", "name_zh": "亚基点", "tier": "secondary", "verified": false}, {"blurb_en": "One of the best river views on the South Rim, overlooking the Unkar Delta.", "blurb_zh": "看科罗拉多河视角最好的观景点之一，Unkar 三角洲尽收眼底。", "category": "viewpoint", "id": "lipan-point", "lat": 36.0022, "lng": -111.9361, "name_en": "Lipan Point", "name_zh": "利潘点", "tier": "secondary", "verified": false}, {"blurb_en": "Named for the painter — three rock layers in one frame, a photographer favorite.", "blurb_zh": "以画家命名的观景点，三层地层色彩同框，摄影爱好者常来。", "category": "viewpoint", "id": "moran-point", "lat": 36.0047, "lng": -111.9557, "name_en": "Moran Point", "name_zh": "莫兰点", "tier": "secondary", "verified": false}, {"blurb_en": "800-year-old Pueblo ruin with a small museum — Native history on Desert View Drive.", "blurb_zh": "800 年前的普韦布洛遗址 + 小型博物馆，顺路了解原住民历史。", "category": "cultural", "id": "tusayan-ruin", "lat": 35.9753, "lng": -111.8612, "name_en": "Tusayan Museum and Ruin", "name_zh": "图萨扬遗址", "tier": "secondary", "verified": false}, {"blurb_en": "Cliff-edge historic photo studio with century-old canyon films and rotating exhibits.", "blurb_zh": "悬崖边的老照相馆，Kolb 兄弟百年前的峡谷影像展，常有画展。", "category": "cultural", "id": "kolb-studio", "lat": 36.0611, "lng": -112.1083, "name_en": "Kolb Studio", "name_zh": "科尔布工作室", "tier": "secondary", "verified": false}, {"blurb_en": "Historic lodge with a cliff-edge restaurant at sunset — book rooms far ahead.", "blurb_zh": "百年历史小屋，悬崖边的餐厅看日落，住宿要提前很久订。", "category": "lodge", "id": "bright-angel-lodge", "lat": 36.0593, "lng": -112.1074, "name_en": "Bright Angel Lodge", "name_zh": "光明天使小屋", "tier": "secondary", "verified": false}];
+
+/* ---- geo -> svg mapping (schematic, ~aspect-correct) ---- */
+const MIN_LAT = 35.96, MAX_LAT = 36.08, MIN_LNG = -112.24, MAX_LNG = -111.80;
+const KMX = 111.32 * Math.cos(36.03 * Math.PI / 180); // ~89.9
+const KMY = 110.57;
+const L = 70, T = 142, SCALE = 26.8; // tuned to match hand-authored scenery
+function proj(lat, lng){
+  return [ L + (lng - MIN_LNG) * KMX * SCALE, T + (MAX_LAT - lat) * KMY * SCALE ];
+}
+
+/* presentation-only nudges so clustered markers don't overlap (true spot = small dot + leader) */
+const NUDGE = {
+  "grand-canyon-village":   { dx:-42, dy:-40, label:"above" },
+  "kolb-studio":            { dx: 46, dy:-22, label:"right" },
+  "bright-angel-lodge":     { dx: -8, dy: 38, label:"below" },
+  "bright-angel-trailhead": { dx: 44, dy: 26, label:"right" },
+  "yavapai-point":          { dx:  2, dy:-66, label:"above" },
+  "south-kaibab-trailhead": { dx:-38, dy: 24, label:"left"  },
+  "yaki-point":             { dx: 44, dy: 14, label:"right" },
+  "lipan-point":            { dx: 18, dy: 34, label:"below" },
+  "mather-point":           { dx:-30, dy:-34, label:"below" }
+};
+
+const CAT_ORDER = ["viewpoint","trailhead","hub","lodge","cultural"];
+
+const STR = {
+  zh: {
+    subtitle:"南缘 South Rim · 手绘插画旅行地图（示意）",
+    legendTitle:"图例 · Legend",
+    legRec:"★ 推荐必看 · must-see",
+    legSec:"次推荐 · 顺路一看",
+    footer:"手绘示意 · 非精确地图 · Step 2 将接入实时 GPS 与一键 Google Maps 导航",
+    toggle:"EN",
+    recPill:"★ 推荐必看", secPill:"次推荐",
+    unverified:"📍 位置为示意，精确坐标核实中",
+    cats:{ viewpoint:"观景点", trailhead:"步道口", hub:"集散地", lodge:"住宿餐饮", cultural:"人文遗迹" }
+  },
+  en: {
+    subtitle:"South Rim · hand-drawn illustrated map (schematic)",
+    legendTitle:"Legend · 图例",
+    legRec:"★ must-see",
+    legSec:"also worth a stop",
+    footer:"Hand-drawn & schematic, not to scale · Step 2 will add live GPS + one-tap Google Maps navigation",
+    toggle:"中文",
+    recPill:"★ must-see", secPill:"also worth a stop",
+    unverified:"📍 Illustrative position; exact coordinates pending verification",
+    cats:{ viewpoint:"viewpoint", trailhead:"trailhead", hub:"hub", lodge:"lodge & dining", cultural:"cultural site" }
+  }
+};
+
+let lang = "zh";
+const svgNS = "http://www.w3.org/2000/svg";
+const markersG = document.getElementById("markers");
+const leadersG = document.getElementById("leaders");
+
+function el(name, attrs, parent){
+  const n = document.createElementNS(svgNS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+function labelPos(x, y, R, anchor){
+  switch(anchor){
+    case "above": return { x:x, y:y - R - 12, anchor:"middle" };
+    case "left":  return { x:x - R - 9, y:y + 4, anchor:"end" };
+    case "right": return { x:x + R + 9, y:y + 4, anchor:"start" };
+    default:      return { x:x, y:y + R + 17, anchor:"middle" };
+  }
+}
+
+function buildMarkers(){
+  POIS.forEach(p => {
+    const [tx, ty] = proj(p.lat, p.lng);
+    const n = NUDGE[p.id] || { dx:0, dy:0, label:"below" };
+    const x = tx + n.dx, y = ty + n.dy;
+    const rec = p.tier === "recommended";
+    const R = rec ? 26 : 18;
+
+    if (n.dx || n.dy){
+      el("line", { x1:tx, y1:ty, x2:x, y2:y, "class":"leader" }, leadersG);
+      el("circle", { cx:tx, cy:ty, r:3.2, "class":"truedot" }, leadersG);
+    }
+
+    const g = el("g", {
+      "class":"poi" + (rec ? "" : " sec"),
+      transform:`translate(${x.toFixed(1)},${y.toFixed(1)})`,
+      tabindex:"0", role:"button", "data-id":p.id,
+      "aria-label": p.name_zh + " / " + p.name_en
+    }, markersG);
+
+    el("ellipse", { cx:0, cy:R - 2, rx:R*0.85, ry:4.5, fill:"#3a2410", opacity:"0.18" }, g);
+    el("circle", { cx:0, cy:0, r:R, "class":"badge" }, g);
+    const use = el("use", { href:"#g-" + p.category, "class":"glyph", transform:`scale(${(R/22).toFixed(2)})` }, g);
+    use.setAttribute("color", "#5a3d1e");
+    if (rec){
+      el("use", { href:"#g-star", transform:`translate(${R-7},${-R+2}) scale(0.95)` }, g);
+    }
+    const lp = labelPos(0, 0, R, n.label);
+    const t = el("text", { x:lp.x, y:lp.y, "text-anchor":lp.anchor, "class":"plabel" }, g);
+    t.dataset.zh = p.name_zh; t.dataset.en = p.name_en;
+    t.textContent = p.name_zh;
+
+    g.addEventListener("click", ev => { ev.stopPropagation(); openPopup(p); });
+    g.addEventListener("keydown", ev => {
+      if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); openPopup(p); }
+    });
+  });
+}
+
+/* ---- popup ---- */
+const popup = document.getElementById("popup");
+let openPoiId = null;
+function openPopup(p){
+  openPoiId = p.id;
+  const s = STR[lang];
+  const rec = p.tier === "recommended";
+  const tierEl = document.getElementById("popTier");
+  tierEl.textContent = rec ? s.recPill : s.secPill;
+  tierEl.className = "pill " + (rec ? "rec" : "sec");
+  document.getElementById("popCat").textContent = s.cats[p.category];
+  document.getElementById("popNameZh").textContent = (lang === "zh") ? p.name_zh : p.name_en;
+  document.getElementById("popNameEn").textContent = (lang === "zh") ? p.name_en : p.name_zh;
+  document.getElementById("popBlurb").textContent = (lang === "zh") ? p.blurb_zh : p.blurb_en;
+  document.getElementById("popNote").textContent = p.verified ? "" : s.unverified;
+  popup.hidden = false;
+}
+function closePopup(){ popup.hidden = true; openPoiId = null; }
+document.getElementById("popClose").addEventListener("click", closePopup);
+document.getElementById("map").addEventListener("click", closePopup);
+document.addEventListener("keydown", ev => { if (ev.key === "Escape") closePopup(); });
+
+/* ---- i18n ---- */
+function renderCats(){
+  const s = STR[lang];
+  const box = document.getElementById("legendCats");
+  box.innerHTML = "";
+  CAT_ORDER.forEach(c => {
+    const span = document.createElement("span");
+    span.className = "row";
+    span.innerHTML =
+      `<svg width="22" height="22" viewBox="-13 -13 26 26">` +
+      `<use href="#g-${c}" color="#5a3d1e"/></svg><span>${s.cats[c]}</span>`;
+    box.appendChild(span);
+  });
+}
+
+function applyLang(){
+  const s = STR[lang];
+  document.documentElement.lang = (lang === "zh") ? "zh-CN" : "en";
+  document.querySelectorAll("[data-i18n]").forEach(n => {
+    const k = n.getAttribute("data-i18n");
+    if (s[k]) n.textContent = s[k];
+  });
+  document.getElementById("langBtn").textContent = s.toggle;
+  document.querySelectorAll("#markers .plabel").forEach(t => {
+    t.textContent = (lang === "zh") ? t.dataset.zh : t.dataset.en;
+    t.classList.toggle("en", lang === "en");
+  });
+  renderCats();
+  if (openPoiId){
+    const p = POIS.find(q => q.id === openPoiId);
+    if (p) openPopup(p);
+  }
+}
+document.getElementById("langBtn").addEventListener("click", () => {
+  lang = (lang === "zh") ? "en" : "zh";
+  applyLang();
+});
+
+/* ---- init ---- */
+buildMarkers();
+applyLang();
+if (window.innerWidth < 640){
+  document.getElementById("legendDetails").removeAttribute("open");
+}
+</script>
+</body>
+</html>
