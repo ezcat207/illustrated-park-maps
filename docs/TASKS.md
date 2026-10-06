@@ -10,3 +10,4 @@
 - [ ] **T4** Step 2：`parks/grand-canyon/map.html`（Leaflet 实时地图，SPEC §7）
 - [ ] **T5** 真机 GPS 实测（iPhone 上开 map.html：蓝点、导航跳转）
 - [ ] **T6** 模板化：第二个公园复用同一套管线（POI json + 两套 HTML 模板）
+- [x] **T2.5** POI 插画 AI 重绘 + 地图全英文（2026-10-06）：14 张暖色手绘风插画（media.generate_image），大徽章 marker（推荐 r=62/次推荐 r=42，贴纸式夸张比例），地图内文字全部英文（删中文切换），图片 base64 内嵌单文件，原图存 assets/illustrations/
