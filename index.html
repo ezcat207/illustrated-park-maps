@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Illustrated Park Maps</title>
+<style>
+  :root{ --paper:#f6eeda; --ink:#4a3826; --accent:#8a5a2b; --gold:#e8a13a; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+  #wrap{ max-width:960px; margin:0 auto; padding:40px 20px 30px; text-align:center; }
+  h1{ font-size:34px; margin:0 0 6px; letter-spacing:1px; }
+  .tag{ color:#8a6a45; font-size:15px; margin:0 0 8px; }
+  .intro{ max-width:640px; margin:0 auto 34px; font-size:15px; line-height:1.7; color:#5a4632; }
+  h2{ font-size:20px; margin:0 0 18px; }
+  h2 small{ display:block; font-weight:normal; font-size:13px; color:#8a6a45; margin-top:4px; }
+  .cards{ display:flex; gap:18px; justify-content:center; flex-wrap:wrap; }
+  .card{
+    width:min(340px, 100%); background:#fffdf5; border:3px solid var(--accent); border-radius:16px;
+    overflow:hidden; text-decoration:none; color:var(--ink); box-shadow:0 4px 18px rgba(90,60,20,.18);
+    transition:transform .12s ease;
+  }
+  .card:hover{ transform:translateY(-3px); }
+  .card img{ width:100%; height:190px; object-fit:cover; display:block; }
+  .card .body{ padding:16px 18px 18px; text-align:left; }
+  .card h3{ margin:0 0 6px; font-size:18px; }
+  .card p{ margin:0 0 12px; font-size:13.5px; line-height:1.6; color:#5a4632; }
+  .card .go{ font-weight:bold; color:var(--accent); font-size:14px; }
+  footer{ margin-top:36px; font-size:12px; color:#a08050; }
+  @media (max-width:640px){ h1{ font-size:26px; } #wrap{ padding:28px 16px 22px; } }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>Illustrated Park Maps</h1>
+  <p class="tag">Hand-drawn-feeling travel maps for national parks</p>
+  <p class="intro">Every point of interest becomes a little illustration pinned on the map —
+    must-sees big, hidden gems small. Browse the illustrated map for inspiration,
+    then switch to the live map to see your real-time location and navigate with one tap.</p>
+
+  <h2>Grand Canyon National Park <small>South Rim · 14 illustrated points of interest</small></h2>
+  <div class="cards">
+    <a class="card" href="parks/grand-canyon/">
+      <img src="assets/illustrations/mather-point.jpg" alt="Mather Point illustration">
+      <div class="body">
+        <h3>Illustrated Map</h3>
+        <p>Explore 8 must-see and 6 also-worth-a-stop spots on a warm hand-drawn map. Tap any illustration for its story.</p>
+        <span class="go">Open the illustrated map →</span>
+      </div>
+    </a>
+    <a class="card" href="parks/grand-canyon/map.html">
+      <img src="assets/illustrations/desert-view-watchtower.jpg" alt="Desert View Watchtower illustration">
+      <div class="body">
+        <h3>Live Map</h3>
+        <p>The same illustrated markers on a real map — with your live GPS position and one-tap Google Maps navigation.</p>
+        <span class="go">Open the live map →</span>
+      </div>
+    </a>
+  </div>
+
+  <footer>Illustrated Park Maps — Grand Canyon is the first park. More parks coming.</footer>
+</div>
+</body>
+</html>

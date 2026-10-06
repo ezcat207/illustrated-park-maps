@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grand Canyon Live Map — Illustrated Park Maps</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{ --paper:#f6eeda; --ink:#4a3826; --accent:#8a5a2b; --gold:#e8a13a; }
+  html,body{ margin:0; height:100%; font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif; color:var(--ink); }
+  #map{ position:fixed; inset:0; z-index:0; }
+  #topbar{
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:10px 14px;
+    background:linear-gradient(to bottom, rgba(246,238,218,.97), rgba(246,238,218,.88));
+    border-bottom:2px solid var(--accent);
+  }
+  #topbar h1{ margin:0; font-size:18px; letter-spacing:.5px; }
+  #topbar p{ margin:2px 0 0; font-size:12px; color:#8a6a45; }
+  #topbar .actions{ display:flex; gap:8px; flex:0 0 auto; }
+  .btn{
+    display:inline-block; border:2px solid var(--accent); background:#fffdf5; color:var(--ink);
+    border-radius:999px; padding:8px 14px; font-size:13px; font-weight:bold; cursor:pointer; text-decoration:none;
+  }
+  .btn:active{ transform:scale(.96); }
+  .btn.primary{ background:var(--accent); color:#fffdf5; border-color:var(--accent); }
+  /* illustration badge markers */
+  .poi-badge{ background:none; border:none; }
+  .poi-badge .badge{
+    border-radius:50%; overflow:hidden; position:relative; background:var(--paper);
+    border:3px solid var(--accent); box-shadow:0 3px 10px rgba(60,35,10,.35);
+  }
+  .poi-badge .badge img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .poi-badge .star{
+    position:absolute; top:-4px; right:-4px; width:26px; height:26px; line-height:26px; text-align:center;
+    background:var(--gold); color:#5a3000; border-radius:50%; font-size:15px;
+    border:2px solid #fffdf5; box-shadow:0 1px 4px rgba(0,0,0,.3);
+  }
+  /* popup */
+  .leaflet-popup-content-wrapper{ border-radius:12px; border:2px solid var(--accent); }
+  .leaflet-popup-content{ margin:12px 14px; line-height:1.5; }
+  .pop{ width:240px; }
+  .pop-img{ width:100%; height:130px; object-fit:cover; border-radius:8px; display:block; }
+  .pop h3{ margin:8px 0 4px; font-size:16px; }
+  .pill{ display:inline-block; font-size:11px; border-radius:999px; padding:2px 9px; border:1.5px solid; margin-bottom:6px; }
+  .pill.rec{ color:#8a4d00; border-color:var(--gold); background:#fdf0d5; font-weight:bold; }
+  .pill.sec{ color:#6a5a3a; border-color:#b09a6a; background:#f6eeda; }
+  .pop p{ margin:4px 0 10px; font-size:13px; color:#5a4632; }
+  .pop-btns{ display:flex; flex-direction:column; gap:8px; }
+  .pop-btns .btn{ text-align:center; font-size:13px; padding:9px 10px; }
+  /* toast */
+  #toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:1001;
+    background:rgba(58,36,16,.92); color:#fffdf5; font-size:13px; padding:10px 16px;
+    border-radius:10px; max-width:min(480px, calc(100vw - 40px)); text-align:center;
+  }
+  #toast[hidden]{ display:none; }
+  @media (max-width:640px){
+    #topbar h1{ font-size:15px; }
+    #topbar p{ display:none; }
+    .btn{ padding:7px 11px; font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<header id="topbar">
+  <div>
+    <h1>Grand Canyon Live Map</h1>
+    <p>Illustrated Park Maps · South Rim · 14 illustrated points of interest</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="index.html">Illustrated map</a>
+    <button class="btn" id="locBtn" type="button">My location</button>
+  </div>
+</header>
+<div id="toast" hidden></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+"use strict";
+var POIS = [{"id":"grand-canyon-village","name_en":"Grand Canyon Village","lat":36.0581,"lng":-112.1084,"tier":"recommended","blurb_en":"South Rim basecamp: visitor center, lodges, dining and the free shuttle hub."},{"id":"bright-angel-trailhead","name_en":"Bright Angel Trailhead","lat":36.0573,"lng":-112.1436,"tier":"recommended","blurb_en":"The classic corridor trailhead — water and shade, great even for a short out-and-back."},{"id":"mather-point","name_en":"Mather Point","lat":36.0616,"lng":-112.108,"tier":"recommended","blurb_en":"The classic South Rim overlook — front row for sunrise, walkable from the visitor center."},{"id":"yavapai-point","name_en":"Yavapai Point / Geology Museum","lat":36.066,"lng":-112.1172,"tier":"recommended","blurb_en":"Home of the Geology Museum — read 2 billion years of rock layers, then look."},{"id":"desert-view-watchtower","name_en":"Desert View Watchtower","lat":36.0439,"lng":-111.8258,"tier":"recommended","blurb_en":"Pueblo-style stone tower with panoramic views of the canyon and the Colorado's bend."},{"id":"grandview-point","name_en":"Grandview Point","lat":35.9969,"lng":-111.9863,"tier":"recommended","blurb_en":"One of the widest South Rim vistas; trailhead of the historic Grandview Trail."},{"id":"hermits-rest","name_en":"Hermit's Rest","lat":36.0622,"lng":-112.2111,"tier":"recommended","blurb_en":"Stone resthouse at the west end of Hermit Road — best done at sunset via the Red shuttle."},{"id":"south-kaibab-trailhead","name_en":"South Kaibab Trailhead","lat":36.0528,"lng":-112.0838,"tier":"recommended","blurb_en":"The most scenic descent (no water, no shade) — Ooh Aah Point makes a perfect turnaround."},{"id":"yaki-point","name_en":"Yaki Point","lat":36.0586,"lng":-112.0838,"tier":"secondary","blurb_en":"Quiet overlook near South Kaibab, shuttle-accessible and less crowded than Mather."},{"id":"lipan-point","name_en":"Lipan Point","lat":36.0326,"lng":-111.8531,"tier":"secondary","blurb_en":"One of the best river views on the South Rim, overlooking the Unkar Delta."},{"id":"moran-point","name_en":"Moran Point","lat":36.0052,"lng":-111.9243,"tier":"secondary","blurb_en":"Named for the painter — three rock layers in one frame, a photographer favorite."},{"id":"tusayan-ruin","name_en":"Tusayan Museum and Ruin","lat":36.0136,"lng":-111.8656,"tier":"secondary","blurb_en":"800-year-old Pueblo ruin with a small museum — Native history on Desert View Drive."},{"id":"kolb-studio","name_en":"Kolb Studio","lat":36.058,"lng":-112.1426,"tier":"secondary","blurb_en":"Cliff-edge historic photo studio with century-old canyon films and rotating exhibits."},{"id":"bright-angel-lodge","name_en":"Bright Angel Lodge","lat":36.0572,"lng":-112.1411,"tier":"secondary","blurb_en":"Historic lodge with a cliff-edge restaurant at sunset — book rooms far ahead."}];
+
+var map = L.map("map", { zoomControl:false }).setView([36.03, -112.05], 10);
+L.control.zoom({ position:"bottomright" }).addTo(map);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains:"abcd",
+  maxZoom:19
+}).addTo(map);
+
+function badgeIcon(p){
+  var size = p.tier === "recommended" ? 84 : 60;
+  var star = p.tier === "recommended" ? '<span class="star">★</span>' : "";
+  return L.divIcon({
+    className:"poi-badge",
+    html:'<div class="badge" style="width:'+size+'px;height:'+size+'px"><img src="../../assets/illustrations/'+p.id+'.jpg" alt="'+p.name_en+'">'+star+'</div>',
+    iconSize:[size, size],
+    iconAnchor:[size/2, size/2],
+    popupAnchor:[0, -size/2 - 6]
+  });
+}
+
+function popupHtml(p){
+  var pill = p.tier === "recommended"
+    ? '<span class="pill rec">★ Must-see</span>'
+    : '<span class="pill sec">Also worth a stop</span>';
+  return '<div class="pop">'
+    + '<img class="pop-img" src="../../assets/illustrations/'+p.id+'.jpg" alt="'+p.name_en+'">'
+    + '<h3>'+p.name_en+'</h3>'
+    + pill
+    + '<p>'+p.blurb_en+'</p>'
+    + '<div class="pop-btns">'
+    + '<a class="btn primary" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lng+'">Navigate in Google Maps</a>'
+    + '<a class="btn" href="index.html">Illustrated map</a>'
+    + '</div></div>';
+}
+
+POIS.forEach(function(p){
+  L.marker([p.lat, p.lng], { icon:badgeIcon(p), title:p.name_en })
+    .bindPopup(popupHtml(p), { maxWidth:280 })
+    .addTo(map);
+});
+map.fitBounds(L.latLngBounds(POIS.map(function(p){ return [p.lat, p.lng]; })), { padding:[36, 36] });
+
+/* ---- live location ---- */
+var meMarker = null, accCircle = null, watchId = null, lastPos = null;
+var toast = document.getElementById("toast");
+function showToast(msg){
+  toast.textContent = msg;
+  toast.hidden = false;
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ toast.hidden = true; }, 4500);
+}
+function onPos(pos){
+  var ll = [pos.coords.latitude, pos.coords.longitude];
+  lastPos = ll;
+  if(!meMarker){
+    meMarker = L.circleMarker(ll, { radius:8, color:"#ffffff", weight:3, fillColor:"#1a73e8", fillOpacity:1 }).addTo(map);
+    accCircle = L.circle(ll, { radius:pos.coords.accuracy || 50, color:"#1a73e8", weight:1, fillOpacity:0.12 }).addTo(map);
+    map.setView(ll, 14);
+  } else {
+    meMarker.setLatLng(ll);
+    accCircle.setLatLng(ll).setRadius(pos.coords.accuracy || 50);
+  }
+}
+function onErr(err){
+  showToast(err && err.code === 1
+    ? "Location access denied — enable it in your browser settings to see your live position."
+    : "Could not get your location. Head outdoors or open this page over HTTPS and try again.");
+}
+document.getElementById("locBtn").addEventListener("click", function(){
+  if(!("geolocation" in navigator)){
+    showToast("Geolocation is not available on this device.");
+    return;
+  }
+  if(watchId !== null){
+    if(lastPos) map.setView(lastPos, 15);
+    return;
+  }
+  showToast("Locating…");
+  watchId = navigator.geolocation.watchPosition(onPos, onErr, { enableHighAccuracy:true, maximumAge:5000, timeout:15000 });
+});
+</script>
+</body>
+</html>
